@@ -1,6 +1,18 @@
-version: '3.8'
-
 services:
+
+  # ─── PostgreSQL ───────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_MULTIPLE_DATABASES=auth_db,todo_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/init.sh
+    networks:
+      - backend
 
   # ─── Auth Service instances ───────────────────────────────────────
   auth-service-1:
@@ -9,10 +21,11 @@ services:
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
-    volumes:
-      - auth-db:/app/auth.db
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/auth_db
     networks:
       - backend
+    depends_on:
+      - postgres
 
   auth-service-2:
     image: ghcr.io/grishagor28/auth-service:latest
@@ -20,10 +33,11 @@ services:
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
-    volumes:
-      - auth-db:/app/auth.db
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/auth_db
     networks:
       - backend
+    depends_on:
+      - postgres
 
   # ─── Todo Service instances ───────────────────────────────────────
   todo-service-1:
@@ -31,20 +45,22 @@ services:
     container_name: todo-service-1
     environment:
       - SECRET_KEY=${SECRET_KEY}
-    volumes:
-      - todo-db:/app/todo.db
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/todo_db
     networks:
       - backend
+    depends_on:
+      - postgres
 
   todo-service-2:
     image: ghcr.io/grishagor28/todo-service:latest
     container_name: todo-service-2
     environment:
       - SECRET_KEY=${SECRET_KEY}
-    volumes:
-      - todo-db:/app/todo.db
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/todo_db
     networks:
       - backend
+    depends_on:
+      - postgres
 
   # ─── Nginx Load Balancer ──────────────────────────────────────────
   nginx:
@@ -64,8 +80,7 @@ services:
       - todo-service-2
 
 volumes:
-  auth-db:
-  todo-db:
+  postgres-data:
 
 networks:
   backend:
