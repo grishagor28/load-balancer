@@ -26,8 +26,10 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/auth_db
+      - INSTANCE_NAME=auth-service-1
     networks:
       - backend
+      - elk_default
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,8 +41,10 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/auth_db
+      - INSTANCE_NAME=auth-service-2
     networks:
       - backend
+      - elk_default
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,8 +56,10 @@ services:
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/todo_db
+      - INSTANCE_NAME=todo-service-1
     networks:
       - backend
+      - elk_default
     depends_on:
       postgres:
         condition: service_healthy
@@ -64,8 +70,10 @@ services:
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/todo_db
+      - INSTANCE_NAME=todo-service-2
     networks:
       - backend
+      - elk_default
     depends_on:
       postgres:
         condition: service_healthy
@@ -93,3 +101,5 @@ volumes:
 networks:
   backend:
     driver: bridge
+  elk_default:
+    external: true
