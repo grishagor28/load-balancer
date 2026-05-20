@@ -7,12 +7,16 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_MULTIPLE_DATABASES=auth_db,todo_db
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/init.sh:/docker-entrypoint-initdb.d/init.sh
     networks:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   # ─── Auth Service instances ───────────────────────────────────────
   auth-service-1:
@@ -25,7 +29,8 @@ services:
     networks:
       - backend
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   auth-service-2:
     image: ghcr.io/grishagor28/auth-service:latest
@@ -37,7 +42,8 @@ services:
     networks:
       - backend
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   # ─── Todo Service instances ───────────────────────────────────────
   todo-service-1:
@@ -49,7 +55,8 @@ services:
     networks:
       - backend
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   todo-service-2:
     image: ghcr.io/grishagor28/todo-service:latest
@@ -60,7 +67,8 @@ services:
     networks:
       - backend
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   # ─── Nginx Load Balancer ──────────────────────────────────────────
   nginx:
