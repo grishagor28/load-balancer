@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+
+  # ─── Auth Service instances ───────────────────────────────────────
+  auth-service-1:
+    image: ghcr.io/grishagor28/auth-service:latest
+    container_name: auth-service-1
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+    volumes:
+      - auth-db:/app/auth.db
+    networks:
+      - backend
+
+  auth-service-2:
+    image: ghcr.io/grishagor28/auth-service:latest
+    container_name: auth-service-2
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+    volumes:
+      - auth-db:/app/auth.db
+    networks:
+      - backend
+
+  # ─── Todo Service instances ───────────────────────────────────────
+  todo-service-1:
+    image: ghcr.io/grishagor28/todo-service:latest
+    container_name: todo-service-1
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - todo-db:/app/todo.db
+    networks:
+      - backend
+
+  todo-service-2:
+    image: ghcr.io/grishagor28/todo-service:latest
+    container_name: todo-service-2
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - todo-db:/app/todo.db
+    networks:
+      - backend
+
+  # ─── Nginx Load Balancer ──────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: load-balancer
+    ports:
+      - "8001:8001"
+      - "8002:8002"
+    volumes:
+      - ./nginx/active-active.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - backend
+    depends_on:
+      - auth-service-1
+      - auth-service-2
+      - todo-service-1
+      - todo-service-2
+
+volumes:
+  auth-db:
+  todo-db:
+
+networks:
+  backend:
+    driver: bridge
