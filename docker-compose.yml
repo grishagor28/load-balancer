@@ -1,6 +1,5 @@
 services:
 
-  # ─── PostgreSQL ───────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: postgres
@@ -18,7 +17,6 @@ services:
       timeout: 5s
       retries: 10
 
-  # ─── Auth Service instances ───────────────────────────────────────
   auth-service-1:
     image: ghcr.io/grishagor28/auth-service:latest
     container_name: auth-service-1
@@ -49,7 +47,6 @@ services:
       postgres:
         condition: service_healthy
 
-  # ─── Todo Service instances ───────────────────────────────────────
   todo-service-1:
     image: ghcr.io/grishagor28/todo-service:latest
     container_name: todo-service-1
@@ -78,7 +75,6 @@ services:
       postgres:
         condition: service_healthy
 
-  # ─── Nginx Load Balancer ──────────────────────────────────────────
   nginx:
     image: nginx:alpine
     container_name: load-balancer
